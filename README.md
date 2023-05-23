@@ -41,7 +41,7 @@ $ npm run start
 # Creating a mongo database in docker container
 $ docker-compose up -d
 
-# Syncing the schema with prisma
+# Syncing the schema with database
 $ npx prisma db push
 
 # watch mode
@@ -60,7 +60,7 @@ $ npm run test
 # Creating a mongo database in docker container
 $ docker-compose up -d
 
-# Syncing the schema with prisma in test database
+# Syncing the schema with test database
 $ dotenv -e .env.test npx prisma db push
 
 # e2e tests
