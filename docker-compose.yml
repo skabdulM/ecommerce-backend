@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  dev-db:
+    image: prismagraphql/mongo-single-replica:5.0.3
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=abdul
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+    networks:
+      - ecommerce_back
+
+  test-db:
+    image: prismagraphql/mongo-single-replica:5.0.3
+    ports:
+      - '27018:27017'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=abdul
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+    networks:
+      - ecommerce_back
+
+networks:
+  ecommerce_back:
