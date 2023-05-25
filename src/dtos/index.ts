@@ -1,4 +1,4 @@
-export * from './auth.dto';
+export * from './signup.dto';
 export * from './login.dto';
 export * from './addCartProduct.dto';
 export * from './addParentCategory.dto';
@@ -12,5 +12,5 @@ export * from './updateProduct.dto';
 export * from './addTag.dto';
 export * from './addVariation.dto';
 export * from './addBrand.dto';
-export * from './edit-user.dto';
 export * from './updateVariation.dto';
+export * from './edit-user.dto';

@@ -27,7 +27,7 @@ model User {
 type Name {
   firstName  String
   middleName String?
-  lastName   String?
+  lastName   String
 }
 
 model Address {

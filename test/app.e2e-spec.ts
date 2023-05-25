@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AppModule } from '../src/app.module';
 import * as pactum from 'pactum';
-import { AuthDto } from 'src/dtos';
+import { EditUserDto, SignUp } from '../src/dtos';
 
 describe('app e3e test', () => {
   let app: INestApplication;
@@ -29,12 +29,15 @@ describe('app e3e test', () => {
   afterAll(() => {
     app.close();
   });
-  const dto: AuthDto = {
+  const dto: SignUp = {
     email: 'abdul@gmail.com',
     password: 'abdul@gmail.com',
-    firstName: 'Abdul Mannan',
-    middleName: 'mannan',
-    lastName: 'Shaikh',
+    name: {
+      firstName: 'Abdul ',
+      middleName: 'Mannan',
+      lastName: 'Shaikh',
+    },
+    phone: '953632565',
   };
   describe('Auth', () => {
     describe('Signup', () => {
@@ -64,12 +67,14 @@ describe('app e3e test', () => {
           .expectStatus(400);
       });
       it('Should signup', () => {
-        const dto: AuthDto = {
+        const dto: SignUp = {
           email: 'abdul@gmail.com',
           password: 'abdul@gmail.com',
-          firstName: 'Abdul ',
-          middleName: 'Mannan',
-          lastName: 'Shaikh',
+          name: {
+            firstName: 'Abdul ',
+            middleName: 'Mannan',
+            lastName: 'Shaikh',
+          },
         };
         return pactum
           .spec()
@@ -79,12 +84,14 @@ describe('app e3e test', () => {
           .stores('userAccessToken', 'access_token');
       });
       it('Should not signup if email is already taken', () => {
-        const dto: AuthDto = {
+        const dto: SignUp = {
           email: 'abdul@gmail.com',
           password: 'abdul@gmail.com',
-          firstName: 'Abdul ',
-          middleName: 'Mannan',
-          lastName: 'Shaikh',
+          name: {
+            firstName: 'Abdul ',
+            middleName: 'Mannan',
+            lastName: 'Shaikh',
+          },
         };
         return pactum
           .spec()
@@ -136,6 +143,76 @@ describe('app e3e test', () => {
             password: 'abadul@gmail.com',
           })
           .expectStatus(403);
+      });
+    });
+  });
+  describe('User', () => {
+    describe('Get current user', () => {
+      it('Get the user info', () => {
+        return pactum
+          .spec()
+          .get('/users/me')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAccessToken}',
+          })
+          .expectStatus(200);
+      });
+      it('Throw error for not having token', () => {
+        return pactum
+          .spec()
+          .get('/users/me')
+          .withHeaders({
+            Authorization: 'Bearer',
+          })
+          .expectStatus(401);
+      });
+    });
+
+    describe('Edit User Details', () => {
+      it('Throw error 400 bad req becoz only firstname is provided to edit name', () => {
+        const dto = {
+          email: 'abdulkill@gmail.com',
+          name: { firstName: 'Abdul Mannan' },
+        };
+        return pactum
+          .spec()
+          .patch('/users/editUser')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAccessToken}',
+          })
+          .withBody(dto)
+          .expectStatus(400);
+      });
+      it('Edit the user Name', () => {
+        const dto: EditUserDto = {
+          name: {
+            firstName: 'Abdul',
+            middleName: 'Mannan',
+            lastName: 'Shaikh',
+          },
+        };
+        return pactum
+          .spec()
+          .patch('/users/editUser')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAccessToken}',
+          })
+          .withBody(dto)
+          .expectStatus(200);
+      });
+      it('Edit the user Email and phone', () => {
+        const dto: EditUserDto = {
+          email: 'newemail@gmail.com',
+          phone: '8425046931',
+        };
+        return pactum
+          .spec()
+          .patch('/users/editUser')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAccessToken}',
+          })
+          .withBody(dto)
+          .expectStatus(200);
       });
     });
   });

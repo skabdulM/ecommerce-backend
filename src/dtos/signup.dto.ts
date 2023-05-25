@@ -1,14 +1,15 @@
+import { Type } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
+  IsNumber,
   IsObject,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
-export class EditUserName {
+export class SignUpname {
   @IsString()
   @IsNotEmpty()
   firstName: string;
@@ -22,16 +23,19 @@ export class EditUserName {
   lastName: string;
 }
 
-export class EditUserDto {
+export class SignUp {
   @IsEmail()
-  @IsOptional()
-  email?: string;
+  @IsNotEmpty()
+  email: string;
 
-  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+
   @ValidateNested()
   @IsObject()
-  @Type(() => EditUserName)
-  name?: EditUserName;
+  @Type(() => SignUpname)
+  name: SignUpname;
 
   @IsString()
   @IsOptional()
