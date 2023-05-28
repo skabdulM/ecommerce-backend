@@ -5,6 +5,9 @@ import { AppModule } from '../src/app.module';
 import * as pactum from 'pactum';
 import { AddressDto, EditAddress, EditUserDto, SignUp } from '../src/dtos';
 
+// NOTE : Storing two user jwt_tokens as userAccessToken and userAccessToken2
+// NOTE : Storing addressId of user1 as address and address2
+
 describe('app e3e test', () => {
   let app: INestApplication;
   let prisma: PrismaService;
