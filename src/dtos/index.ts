@@ -14,3 +14,5 @@ export * from './addVariation.dto';
 export * from './addBrand.dto';
 export * from './updateVariation.dto';
 export * from './edit-user.dto';
+export * from './address.dto';
+export * from './edit-address.dto';

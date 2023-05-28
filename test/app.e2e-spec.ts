@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AppModule } from '../src/app.module';
 import * as pactum from 'pactum';
-import { EditUserDto, SignUp } from '../src/dtos';
+import { AddressDto, EditAddress, EditUserDto, SignUp } from '../src/dtos';
 
 describe('app e3e test', () => {
   let app: INestApplication;
@@ -29,16 +29,7 @@ describe('app e3e test', () => {
   afterAll(() => {
     app.close();
   });
-  const dto: SignUp = {
-    email: 'abdul@gmail.com',
-    password: 'abdul@gmail.com',
-    name: {
-      firstName: 'Abdul ',
-      middleName: 'Mannan',
-      lastName: 'Shaikh',
-    },
-    phone: '953632565',
-  };
+
   describe('Auth', () => {
     describe('Signup', () => {
       it('Should not signup if email is empty', () => {
@@ -67,9 +58,18 @@ describe('app e3e test', () => {
           .expectStatus(400);
       });
       it('Should signup', () => {
-        const dto: SignUp = {
-          email: 'abdul@gmail.com',
-          password: 'abdul@gmail.com',
+        const user: SignUp = {
+          email: 'test@gmail.com',
+          password: 'test@gmail.com',
+          name: {
+            firstName: 'Abdul ',
+            middleName: 'Mannan',
+            lastName: 'Shaikh',
+          },
+        };
+        const user2: SignUp = {
+          email: 'test@gmail.com',
+          password: 'test@gmail.com',
           name: {
             firstName: 'Abdul ',
             middleName: 'Mannan',
@@ -79,14 +79,14 @@ describe('app e3e test', () => {
         return pactum
           .spec()
           .post('/auth/signup')
-          .withBody(dto)
+          .withBody(user)
           .expectStatus(201)
           .stores('userAccessToken', 'access_token');
       });
-      it('Should not signup if email is already taken', () => {
-        const dto: SignUp = {
-          email: 'abdul@gmail.com',
-          password: 'abdul@gmail.com',
+      it('Should signup and create another user', () => {
+        const user2: SignUp = {
+          email: 'test2@gmail.com',
+          password: 'test2@gmail.com',
           name: {
             firstName: 'Abdul ',
             middleName: 'Mannan',
@@ -96,7 +96,24 @@ describe('app e3e test', () => {
         return pactum
           .spec()
           .post('/auth/signup')
-          .withBody(dto)
+          .withBody(user2)
+          .expectStatus(201)
+          .stores('userAccessToken2', 'access_token');
+      });
+      it('Should not signup if email is already taken', () => {
+        const user: SignUp = {
+          email: 'test@gmail.com',
+          password: 'test@gmail.com',
+          name: {
+            firstName: 'Abdul ',
+            middleName: 'Mannan',
+            lastName: 'Shaikh',
+          },
+        };
+        return pactum
+          .spec()
+          .post('/auth/signup')
+          .withBody(user)
           .expectStatus(403);
       });
     });
@@ -105,9 +122,23 @@ describe('app e3e test', () => {
         return pactum
           .spec()
           .post('/auth/signin')
-          .withBody(dto)
+          .withBody({
+            email: 'test@gmail.com',
+            password: 'test@gmail.com',
+          })
           .expectStatus(200)
           .stores('userAccessToken', 'access_token');
+      });
+      it('Should Signin in another user account', () => {
+        return pactum
+          .spec()
+          .post('/auth/signin')
+          .withBody({
+            email: 'test2@gmail.com',
+            password: 'test2@gmail.com',
+          })
+          .expectStatus(200)
+          .stores('userAccessToken2', 'access_token');
       });
       it('Should not Signin if email is empty', () => {
         return pactum
@@ -139,7 +170,7 @@ describe('app e3e test', () => {
           .spec()
           .post('/auth/signin')
           .withBody({
-            email: 'abdawdul@gmail.com',
+            email: 'test@gmail.com',
             password: 'abadul@gmail.com',
           })
           .expectStatus(403);
@@ -151,7 +182,7 @@ describe('app e3e test', () => {
       it('Get the user info', () => {
         return pactum
           .spec()
-          .get('/users/me')
+          .get('/user/me')
           .withHeaders({
             Authorization: 'Bearer $S{userAccessToken}',
           })
@@ -160,7 +191,7 @@ describe('app e3e test', () => {
       it('Throw error for not having token', () => {
         return pactum
           .spec()
-          .get('/users/me')
+          .get('/user/me')
           .withHeaders({
             Authorization: 'Bearer',
           })
@@ -176,7 +207,7 @@ describe('app e3e test', () => {
         };
         return pactum
           .spec()
-          .patch('/users/editUser')
+          .patch('/user/editUser')
           .withHeaders({
             Authorization: 'Bearer $S{userAccessToken}',
           })
@@ -193,7 +224,7 @@ describe('app e3e test', () => {
         };
         return pactum
           .spec()
-          .patch('/users/editUser')
+          .patch('/user/editUser')
           .withHeaders({
             Authorization: 'Bearer $S{userAccessToken}',
           })
@@ -207,7 +238,7 @@ describe('app e3e test', () => {
         };
         return pactum
           .spec()
-          .patch('/users/editUser')
+          .patch('/user/editUser')
           .withHeaders({
             Authorization: 'Bearer $S{userAccessToken}',
           })
@@ -215,38 +246,137 @@ describe('app e3e test', () => {
           .expectStatus(200);
       });
     });
+    describe('User Address', () => {
+      it('Add An Address', () => {
+        const address: AddressDto = {
+          address: '003/B-wing, Chandresh rivera',
+          streetName: 'Lodha Road',
+          landmark: 'Naya Nagar',
+          locality: 'Thane',
+          pincode: 40130,
+          city: 'Dahisar',
+          state: 'Maharashtra',
+          addresstype: false,
+        };
+        return pactum
+          .spec()
+          .post('/user/addaddress')
+          .withBearerToken('$S{userAccessToken}')
+          .withBody(address)
+          .expectStatus(201)
+          .stores('address', 'id');
+      });
+      it('Add another Address', () => {
+        const address: AddressDto = {
+          address: '002/testB-wing, Chandresh rivera',
+          streetName: 'test Road',
+          landmark: 'test Nagar',
+          locality: 'Thane',
+          pincode: 40041,
+          city: 'MIra road',
+          state: 'Maharashtra',
+          addresstype: false,
+        };
+        return pactum
+          .spec()
+          .post('/user/addaddress')
+          .withBearerToken('$S{userAccessToken}')
+          .withBody(address)
+          .stores('address2', 'id')
+          .expectStatus(201);
+      });
+      it('Get the address', () => {
+        return pactum
+          .spec()
+          .get('/user/address/$S{address}')
+          .withBearerToken('$S{userAccessToken}')
+          .expectStatus(200);
+      });
+      it('Should not get the address of another user', () => {
+        return pactum
+          .spec()
+          .get('/user/address/$S{address}')
+          .withBearerToken('$S{userAccessToken2}')
+          .expectStatus(401);
+      });
+      it('Get all user address', () => {
+        return pactum
+          .spec()
+          .get('/user/me')
+          .withQueryParams('address', 'true')
+          .withBearerToken('$S{userAccessToken}')
+          .expectStatus(200)
+          .expectJsonLike({
+            address: [],
+          });
+      });
+      it('Should Edit the User1 Address 1', () => {
+        const newaddress: EditAddress = {
+          address: '60332/fajh',
+          pincode: 9520,
+          city: 'Bhayandar',
+        };
+        return pactum
+          .spec()
+          .patch('/user/editaddress/$S{address}')
+          .withBearerToken('$S{userAccessToken}')
+          .withBody(newaddress)
+          .expectStatus(200)
+          .expectJsonLike({
+            address: '60332/fajh',
+            pincode: 9520,
+            city: 'Bhayandar',
+          });
+      });
+      it('Should throw error for wrong address id', () => {
+        const newaddress: EditAddress = {
+          address: '60332/fajh',
+          pincode: 9520,
+          city: 'Bhayandar',
+        };
+        return pactum
+          .spec()
+          .patch('/user/editaddress/address}')
+          .withBearerToken('$S{userAccessToken}')
+          .withBody(newaddress)
+          .expectStatus(400);
+      });
+      it('Should not Edit address1 when another user tries', () => {
+        const newaddress: EditAddress = {
+          address: '60332/fajh',
+          pincode: 9520,
+          city: 'Bhayandar',
+        };
+        return pactum
+          .spec()
+          .patch('/user/editaddress/$S{address}')
+          .withBearerToken('$S{userAccessToken2}')
+          .withBody(newaddress)
+          .expectStatus(403);
+      });
+      it('Should not delete the address when another user tries', () => {
+        return pactum
+          .spec()
+          .delete('/user/deleteaddress/$S{address}')
+          .withBearerToken('$S{userAccessToken2}')
+          .expectStatus(403);
+      });
+      it('Should throw error for providing wrong addres id ', () => {
+        return pactum
+          .spec()
+          .delete('/user/deleteaddress/$address')
+          .withBearerToken('$S{userAccessToken}')
+          .expectStatus(400);
+      });
+      it('Should delete the address1 of user1', () => {
+        return pactum
+          .spec()
+          .delete('/user/deleteaddress/$S{address}')
+          .withBearerToken('$S{userAccessToken}')
+          .expectStatus(204);
+      });
+    });
   });
-
-  // describe('User', () => {
-  //   describe('Get current user', () => {
-  //     it('Get the user info', () => {
-  //       return pactum
-  //         .spec()
-  //         .get('/users/me')
-  //         .withHeaders({
-  //           Authorization: 'Bearer $S{userAccessToken}',
-  //         })
-  //         .expectStatus(200);
-  //     });
-  //   });
-
-  //   describe('Edit user', () => {
-  //     it('Edit the user info', () => {
-  //       const dto = {
-  //         email: 'abdul@gmail.com',
-  //         firstName: 'Abdul Mannan',
-  //       };
-  //       return pactum
-  //         .spec()
-  //         .patch('/users/editUser')
-  //         .withHeaders({
-  //           Authorization: 'Bearer $S{userAccessToken}',
-  //         })
-  //         .withBody(dto)
-  //         .expectStatus(200);
-  //     });
-  //   });
-  // });
 
   // describe('Products', () => {
   //   //add product
