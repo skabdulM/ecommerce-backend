@@ -3,9 +3,18 @@ import { Test } from '@nestjs/testing';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AppModule } from '../src/app.module';
 import * as pactum from 'pactum';
-import { AddressDto, EditAddress, EditUserDto, SignUp } from '../src/dtos';
+import {
+  AddressDto,
+  EditAddress,
+  EditUserDto,
+  Email,
+  ForgotPassword,
+  SignUp,
+  UpdatePassword,
+} from '../src/dtos';
 
 // NOTE : Storing two user jwt_tokens as userAccessToken and userAccessToken2
+// NOTE : Storing two user authTokens as authCode and authCode2
 // NOTE : Storing addressId of user1 as address and address2
 
 describe('app e3e test', () => {
@@ -28,6 +37,7 @@ describe('app e3e test', () => {
     await prisma.cleaDb();
 
     pactum.request.setBaseUrl('http://localhost:3000');
+    pactum.request.setDefaultTimeout(5000);
   });
   afterAll(() => {
     app.close();
@@ -60,7 +70,8 @@ describe('app e3e test', () => {
           .withBody({})
           .expectStatus(400);
       });
-      it('Should signup', () => {
+
+      it('Should signup', async () => {
         const user: SignUp = {
           email: 'test@gmail.com',
           password: 'test@gmail.com',
@@ -69,24 +80,28 @@ describe('app e3e test', () => {
             middleName: 'Mannan',
             lastName: 'Shaikh',
           },
+          phone: '9632561563',
         };
-        const user2: SignUp = {
-          email: 'test@gmail.com',
-          password: 'test@gmail.com',
-          name: {
-            firstName: 'Abdul ',
-            middleName: 'Mannan',
-            lastName: 'Shaikh',
-          },
-        };
-        return pactum
+        return await pactum
           .spec()
           .post('/auth/signup')
           .withBody(user)
           .expectStatus(201)
+          .stores('authCode', 'authToken')
           .stores('userAccessToken', 'access_token');
       });
-      it('Should signup and create another user', () => {
+      it('Should resend the verification code', async () => {
+        const email: Email = {
+          email: 'test@gmail.com',
+        };
+        return await pactum
+          .spec()
+          .post('/auth/verification/resend')
+          .withBody(email)
+          .expectStatus(201)
+          .stores('authCode', 'authToken');
+      });
+      it('Should signup and create another user', async () => {
         const user2: SignUp = {
           email: 'test2@gmail.com',
           password: 'test2@gmail.com',
@@ -96,11 +111,12 @@ describe('app e3e test', () => {
             lastName: 'Shaikh',
           },
         };
-        return pactum
+        return await pactum
           .spec()
           .post('/auth/signup')
           .withBody(user2)
           .expectStatus(201)
+          .stores('authCode2', 'authToken')
           .stores('userAccessToken2', 'access_token');
       });
       it('Should not signup if email is already taken', () => {
@@ -120,6 +136,40 @@ describe('app e3e test', () => {
           .expectStatus(403);
       });
     });
+    describe('Verification', () => {
+      it('Should throw error for wrong verification code', () => {
+        return pactum
+          .spec()
+          .post('/auth/verify')
+          .withBody({ code: '863205' })
+          .withBearerToken('$S{userAccessToken}')
+          .expectStatus(401);
+      });
+      it('Should throw error for verifying from another user', () => {
+        return pactum
+          .spec()
+          .post('/auth/verify')
+          .withBody({ code: '$S{authCode}' })
+          .withBearerToken('$S{userAccessToken2}')
+          .expectStatus(401);
+      });
+      it('Should Verify the account', () => {
+        return pactum
+          .spec()
+          .post('/auth/verify')
+          .withBody({ code: '$S{authCode}' })
+          .withBearerToken('$S{userAccessToken}')
+          .expectStatus(202);
+      });
+      it('Should Verify the second account', () => {
+        return pactum
+          .spec()
+          .post('/auth/verify')
+          .withBody({ code: '$S{authCode2}' })
+          .withBearerToken('$S{userAccessToken2}')
+          .expectStatus(202);
+      });
+    });
     describe('Signin', () => {
       it('Should Signin', () => {
         return pactum
@@ -129,8 +179,7 @@ describe('app e3e test', () => {
             email: 'test@gmail.com',
             password: 'test@gmail.com',
           })
-          .expectStatus(200)
-          .stores('userAccessToken', 'access_token');
+          .expectStatus(200);
       });
       it('Should Signin in another user account', () => {
         return pactum
@@ -140,8 +189,7 @@ describe('app e3e test', () => {
             email: 'test2@gmail.com',
             password: 'test2@gmail.com',
           })
-          .expectStatus(200)
-          .stores('userAccessToken2', 'access_token');
+          .expectStatus(200);
       });
       it('Should not Signin if email is empty', () => {
         return pactum
@@ -179,6 +227,117 @@ describe('app e3e test', () => {
           .expectStatus(403);
       });
     });
+    describe('Update Email and password', () => {
+      it('Should send req for email update', () => {
+        const dto: Email = {
+          email: 'testupdate@gmail.com',
+        };
+        return pactum
+          .spec()
+          .patch('/auth/update/email/req')
+          .withBearerToken('$S{userAccessToken}')
+          .withBody(dto)
+          .stores('authCode', 'authToken')
+          .stores('userAccessToken', 'access_token');
+      });
+      it('Should resend the verification code', async () => {
+        const email: Email = {
+          email: 'testupdate@gmail.com',
+        };
+        return await pactum
+          .spec()
+          .post('/auth/verification/resend')
+          .withBody(email)
+          .expectStatus(201)
+          .stores('authCode', 'authToken');
+      });
+      it('Should Verify the verification code for updated email', () => {
+        return pactum
+          .spec()
+          .post('/auth/verify')
+          .withBody({ code: '$S{authCode}' })
+          .withBearerToken('$S{userAccessToken}')
+          .expectStatus(202);
+      });
+      it('Should Update the password', () => {
+        const password: UpdatePassword = {
+          password: 'test@gmail.com',
+          newPassword: 'newtest@gmail.com',
+        };
+        return pactum
+          .spec()
+          .patch('/auth/update/password')
+          .withBody(password)
+          .withBearerToken('$S{userAccessToken}')
+          .expectStatus(200);
+      });
+      it('Should not Update the password', () => {
+        const password: UpdatePassword = {
+          password: 'test@gmail.com',
+          newPassword: 'newtest@gmail.com',
+        };
+        return pactum
+          .spec()
+          .patch('/auth/update/password')
+          .withBody(password)
+          .withBearerToken('$S{userAccessToken}')
+          .expectStatus(403);
+      });
+      it('Should Send the verification code for forgot password', () => {
+        const email: Email = {
+          email: 'testupdate@gmail.com',
+        };
+        return pactum
+          .spec()
+          .patch('/auth/forgotpasswordreq')
+          .withBody(email)
+          .expectStatus(302)
+          .stores('authCode', 'authToken');
+      });
+      it('Should resend the verification code', async () => {
+        const email: Email = {
+          email: 'testupdate@gmail.com',
+        };
+        return await pactum
+          .spec()
+          .post('/auth/verification/resend')
+          .withBody(email)
+          .expectStatus(201)
+          .stores('authCode', 'authToken');
+      });
+      it('Should reject to update password if wrong authcode is provide', () => {
+        const password: ForgotPassword = {
+          newPassword: 'testupdate@gmail.com',
+          code: '225930',
+        };
+        return pactum
+          .spec()
+          .patch('/auth/forgotpasswordverify')
+          .withBody(password)
+          .expectStatus(401);
+      });
+      it('Should update the password to new password', () => {
+        const password: ForgotPassword = {
+          newPassword: 'testupdate@gmail.com',
+          code: '$S{authCode}',
+        };
+        return pactum
+          .spec()
+          .patch('/auth/forgotpasswordverify')
+          .withBody(password)
+          .expectStatus(200);
+      });
+      it('Should reject the req if email not found', () => {
+        const email: Email = {
+          email: 'testupdsate@gmail.com',
+        };
+        return pactum
+          .spec()
+          .patch('/auth/forgotpasswordreq')
+          .withBody(email)
+          .expectStatus(400);
+      });
+    });
   });
   describe('User', () => {
     describe('Get current user', () => {
@@ -186,9 +345,7 @@ describe('app e3e test', () => {
         return pactum
           .spec()
           .get('/user/me')
-          .withHeaders({
-            Authorization: 'Bearer $S{userAccessToken}',
-          })
+          .withBearerToken('$S{userAccessToken}')
           .expectStatus(200);
       });
       it('Throw error for not having token', () => {
@@ -205,15 +362,12 @@ describe('app e3e test', () => {
     describe('Edit User Details', () => {
       it('Throw error 400 bad req becoz only firstname is provided to edit name', () => {
         const dto = {
-          email: 'abdulkill@gmail.com',
           name: { firstName: 'Abdul Mannan' },
         };
         return pactum
           .spec()
           .patch('/user/editUser')
-          .withHeaders({
-            Authorization: 'Bearer $S{userAccessToken}',
-          })
+          .withBearerToken('$S{userAccessToken}')
           .withBody(dto)
           .expectStatus(400);
       });
@@ -228,23 +382,18 @@ describe('app e3e test', () => {
         return pactum
           .spec()
           .patch('/user/editUser')
-          .withHeaders({
-            Authorization: 'Bearer $S{userAccessToken}',
-          })
+          .withBearerToken('$S{userAccessToken}')
           .withBody(dto)
           .expectStatus(200);
       });
-      it('Edit the user Email and phone', () => {
+      it('Edit the user phone', () => {
         const dto: EditUserDto = {
-          email: 'newemail@gmail.com',
           phone: '8425046931',
         };
         return pactum
           .spec()
           .patch('/user/editUser')
-          .withHeaders({
-            Authorization: 'Bearer $S{userAccessToken}',
-          })
+          .withBearerToken('$S{userAccessToken}')
           .withBody(dto)
           .expectStatus(200);
       });
@@ -380,188 +529,4 @@ describe('app e3e test', () => {
       });
     });
   });
-
-  // describe('Products', () => {
-  //   //add product
-  //   describe('Product ', () => {
-  //     it('should add product', () => {
-  //       const product = {
-  //         productName: 'hebe product ',
-  //         productDescription: 'hebe;hebedsfasfdnbfb',
-  //         productPrice: 2302,
-  //         productImg: 'https://picsum.photos/200/300?random=2',
-  //         productDiscount: 10,
-  //         category: 'category',
-  //         brand: 'brand',
-  //         productSize: 's',
-  //         productColor: 'green',
-  //         productQuantity: 3000,
-  //       };
-  //       return pactum
-  //         .spec()
-  //         .post('/product/addProduct')
-  //         .withHeaders({
-  //           Authorization: 'Bearer $S{userAccessToken}',
-  //         })
-  //         .withBody(product)
-  //         .expectStatus(201);
-  //     });
-  //     it('should not add product if product fields are not provided', () => {
-  //       const product = {
-  //         productName: 'hebe product ',
-  //         productDescription: 'hebe;hebedsfasfdnbfb',
-  //         productDiscount: 10,
-  //         category: 'category',
-  //         brand: 'brand',
-  //         productColor: 'green',
-  //       };
-  //       return pactum
-  //         .spec()
-  //         .post('/product/addProduct')
-  //         .withHeaders({
-  //           Authorization: 'Bearer $S{userAccessToken}',
-  //         })
-  //         .withBody(product)
-  //         .expectStatus(400);
-  //     });
-  //     it('should get products', () => {
-  //       return pactum
-  //         .spec()
-  //         .get('/product/getproducts')
-  //         .withQueryParams('greaterthan', 0)
-  //         .withQueryParams('lessthan', 10000)
-  //         .withQueryParams('take', 2)
-  //         .stores('productId', '[0].id')
-  //         .expectStatus(200);
-  //     });
-  //     it('should get product by id', () => {
-  //       return pactum
-  //         .spec()
-  //         .get('/product/{id}')
-  //         .withPathParams('id', '$S{productId}')
-  //         .expectStatus(200);
-  //     });
-  //     it('should update the product', () => {
-  //       const product = {
-  //         productName: 'hebe product 1',
-  //         productDiscount: 40,
-  //       };
-  //       return pactum
-  //         .spec()
-  //         .patch('/product/updateproduct/{id}')
-  //         .withPathParams('id', '$S{productId}')
-  //         .withHeaders({
-  //           Authorization: 'Bearer $S{userAccessToken}',
-  //         })
-  //         .withBody(product)
-  //         .expectStatus(200);
-  //     });
-  //     it('should not update the product and throw error', () => {
-  //       const product = {
-  //         productName: 'hebe product 1',
-  //         productDiscount: 40,
-  //       };
-  //       return pactum
-  //         .spec()
-  //         .patch('/product/updateproduct/{id}')
-  //         .withPathParams('id', '04f7902a-8db3-4268-ad227-02d8d0ec6224')
-  //         .withHeaders({
-  //           Authorization: 'Bearer $S{userAccessToken}',
-  //         })
-  //         .withBody(product)
-  //         .expectStatus(400);
-  //     });
-  //   });
-  //   describe('Product tags and categories', () => {
-  //     it('Should add product Tag', () => {
-  //       const tag = {
-  //         tagName: 'best selling product',
-  //         productId: '$S{productId}',
-  //       };
-  //       return pactum
-  //         .spec()
-  //         .patch('/product/addProductTag')
-  //         .withHeaders({
-  //           Authorization: 'Bearer $S{userAccessToken}',
-  //         })
-  //         .withBody(tag)
-  //         .expectStatus(200);
-  //     });
-  //     it('Should add another product Tag', () => {
-  //       const tag = {
-  //         tagName: 'best selling product in india',
-  //         productId: '$S{productId}',
-  //       };
-  //       return pactum
-  //         .spec()
-  //         .patch('/product/addProductTag')
-  //         .withHeaders({
-  //           Authorization: 'Bearer $S{userAccessToken}',
-  //         })
-  //         .withBody(tag)
-  //         .expectStatus(200);
-  //     });
-  //     it('Should not add product Tag and throw error', () => {
-  //       const tag = {
-  //         tagName: 'worst product',
-  //         productId: '04f7902a-8db3-4268-ad227-02d8d0ec6224',
-  //       };
-  //       return pactum
-  //         .spec()
-  //         .patch('/product/addProductTag')
-  //         .withHeaders({
-  //           Authorization: 'Bearer $S{userAccessToken}',
-  //         })
-  //         .withBody(tag)
-  //         .expectStatus(400);
-  //     });
-  //     it('Should remove tag from the product', () => {
-  //       const tag = {
-  //         tagName: 'best selling product',
-  //         productId: '$S{productId}',
-  //       };
-  //       return pactum
-  //         .spec()
-  //         .patch('/product/removetag')
-  //         .withHeaders({
-  //           Authorization: 'Bearer $S{userAccessToken}',
-  //         })
-  //         .withBody(tag);
-  //     });
-  //     it('Should not remove tag and throw error', () => {
-  //       const tag = {
-  //         tagName: 'best selling product wd',
-  //         productId: '04f7902a-8db3-4268-ad227-02d8d0ec6224',
-  //       };
-  //       return pactum
-  //         .spec()
-  //         .patch('/product/removetag')
-  //         .withHeaders({
-  //           Authorization: 'Bearer $S{userAccessToken}',
-  //         })
-  //         .withBody(tag)
-  //         .expectStatus(400);
-  //     });
-  //   });
-  //   //add product variation
-  //   //edit product variation
-  //   //delete product variatoin
-  //   //add prodcut category
-  //   //delete product category
-  //   //get product by id
-  //   //get all products
-  //   //search product
-  //   //get category names
-  //   //get brand names
-  // });
-
-  // describe('Cart', () => {
-  //   describe('add to cart ', () => {});
-  //   describe('get cart product by id', () => {});
-  //   describe('Get Cart product ', () => {});
-  //   describe('edit product in cart', () => {});
-  //   describe('delete product', () => {});
-  // });
-
-  // describe('Orders', () => {});
 });

@@ -28,6 +28,7 @@ export class UserService {
     delete user.hash;
     return user;
   }
+
   async editUser(userId: string, dto: EditUserDto) {
     const user = await this.prisma.user
       .update({
@@ -47,7 +48,7 @@ export class UserService {
   }
 
   async addAddress(userId: string, dto: AddressDto) {
-    const user = await this.prisma.address
+    const address = await this.prisma.address
       .create({
         data: {
           userId: userId,
@@ -55,9 +56,9 @@ export class UserService {
         },
       })
       .catch((error) => {
-        throw new BadRequestException();
+        throw new BadRequestException(error);
       });
-    return user;
+    return address;
   }
 
   async getAddress(userId: string, addressId: string) {

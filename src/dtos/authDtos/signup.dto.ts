@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsNumber,
@@ -42,6 +43,10 @@ export class SignUp {
   @Type(() => SignUpname)
   name: SignUpname;
 
+  // @IsString()
+  // @IsOptional()
+  // authConfirmToken?: string;
+  //[ ] Phone number verify
   @IsString()
   @IsOptional()
   @IsPhoneNumber('IN')

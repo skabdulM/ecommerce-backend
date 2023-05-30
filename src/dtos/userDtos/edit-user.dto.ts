@@ -23,9 +23,9 @@ export class EditUserName {
 }
 
 export class EditUserDto {
-  @IsEmail()
-  @IsOptional()
-  email?: string;
+  // @IsEmail()
+  // @IsOptional()
+  // email?: string;
 
   @IsOptional()
   @ValidateNested()
