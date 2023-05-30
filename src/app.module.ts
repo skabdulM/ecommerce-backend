@@ -30,7 +30,7 @@ import { join } from 'path';
         from: '"No Reply" vancedabdulmannan@gmail.com',
       },
       template: {
-        dir: join(__dirname, '../email-templates'),
+        dir: join(__dirname, './email-templates'),
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true,

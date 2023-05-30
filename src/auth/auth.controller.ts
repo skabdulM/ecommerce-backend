@@ -28,17 +28,17 @@ export class AuthController {
     return this.authService.signup(dto);
   }
 
-  @HttpCode(HttpStatus.OK)
-  @Post('signin')
-  signin(@Body() dto: LoginDto) {
-    return this.authService.signin(dto);
-  }
-  //[x] add dto to the body
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.ACCEPTED)
   @Post('verify')
   async Verify(@GetUser('id') userId: string, @Body() dto: VerifyCode) {
     return await this.authService.verifyAccount(userId, dto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('signin')
+  signin(@Body() dto: LoginDto) {
+    return this.authService.signin(dto);
   }
 
   @UseGuards(JwtGuard)
@@ -53,11 +53,6 @@ export class AuthController {
     return this.authService.updatePassword(userId, dto);
   }
 
-  @Post('verification/resend')
-  resendVerification(@Body() dto: Email) {
-    return this.authService.resendVerification(dto);
-  }
-
   @HttpCode(HttpStatus.FOUND)
   @Patch('forgotpasswordreq')
   forgotPasswordreq(@Body() dto: Email) {
@@ -67,5 +62,10 @@ export class AuthController {
   @Patch('forgotpasswordverify')
   forgotPasswordverify(@Body() dto: ForgotPassword) {
     return this.authService.forgotPasswordverify(dto);
+  }
+
+  @Post('verification/resend')
+  resendVerification(@Body() dto: Email) {
+    return this.authService.resendVerification(dto);
   }
 }

@@ -29,50 +29,10 @@ export class AuthService {
     private config: ConfigService,
     private mailerService: MailerService,
   ) {}
+
   private randomeNumber() {
     const temp = Math.floor(100000 + Math.random() * 900000);
     return temp;
-  }
-
-  async sendConfirmedEmail(user: any) {
-    const {
-      email,
-      name: { firstName, lastName, middleName },
-    } = user;
-    const fullName = firstName + ' ' + middleName + ' ' + lastName;
-
-    await this.mailerService.sendMail({
-      to: email,
-      subject: 'Welcome to Ecommerce_backend your email has been confirmed',
-      template: 'confirmed',
-      context: {
-        fullName,
-        email,
-      },
-    });
-  }
-
-  async sendConfirmationEmail(user: any) {
-    const {
-      email,
-      name: { firstName, lastName, middleName },
-    } = await user;
-    const fullName = firstName + ' ' + middleName + ' ' + lastName;
-
-    await this.mailerService
-      .sendMail({
-        to: email,
-        subject: 'Welcome to Ecommerce_backend please confirm your Email',
-        template: 'confirm',
-        context: {
-          fullName,
-          email,
-          code: this.randomeNumber(),
-        },
-      })
-      .catch((e) => {
-        throw new BadRequestException(e);
-      });
   }
 
   async signup(dto: SignUp) {
@@ -314,5 +274,46 @@ export class AuthService {
     } catch (error) {
       throw new BadRequestException(error);
     }
+  }
+
+  async sendConfirmedEmail(user: any) {
+    const {
+      email,
+      name: { firstName, lastName, middleName },
+    } = user;
+    const fullName = firstName + ' ' + middleName + ' ' + lastName;
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Welcome to Ecommerce_backend your email has been confirmed',
+      template: 'confirmed',
+      context: {
+        fullName,
+        email,
+      },
+    });
+  }
+
+  async sendConfirmationEmail(user: any) {
+    const {
+      email,
+      name: { firstName, lastName, middleName },
+    } = await user;
+    const fullName = firstName + ' ' + middleName + ' ' + lastName;
+
+    await this.mailerService
+      .sendMail({
+        to: email,
+        subject: 'Welcome to Ecommerce_backend please confirm your Email',
+        template: 'confirm',
+        context: {
+          fullName,
+          email,
+          code: this.randomeNumber(),
+        },
+      })
+      .catch((e) => {
+        throw new BadRequestException(e);
+      });
   }
 }
