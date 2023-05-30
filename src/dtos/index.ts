@@ -1,5 +1,6 @@
 export * from './authDtos/signup.dto';
 export * from './authDtos/login.dto';
+export * from './authDtos/verifycode.dto';
 export * from './authDtos/updatepassword.dto';
 export * from './authDtos/forgotpassword.dto';
 export * from './authDtos/Email.dto';

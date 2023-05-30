@@ -14,6 +14,7 @@ import {
   LoginDto,
   SignUp,
   UpdatePassword,
+  VerifyCode,
 } from '../dtos';
 import { GetUser } from './decorator';
 import { JwtGuard } from './guard';
@@ -32,12 +33,12 @@ export class AuthController {
   signin(@Body() dto: LoginDto) {
     return this.authService.signin(dto);
   }
-  //[ ] add dto to the body
+  //[x] add dto to the body
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.ACCEPTED)
   @Post('verify')
-  async Verify(@GetUser('id') userId: string, @Body() body) {
-    return await this.authService.verifyAccount(userId, body.code);
+  async Verify(@GetUser('id') userId: string, @Body() dto: VerifyCode) {
+    return await this.authService.verifyAccount(userId, dto);
   }
 
   @UseGuards(JwtGuard)

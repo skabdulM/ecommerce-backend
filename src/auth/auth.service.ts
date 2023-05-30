@@ -13,6 +13,7 @@ import {
   LoginDto,
   SignUp,
   UpdatePassword,
+  VerifyCode,
 } from '../dtos';
 import * as argon from 'argon2';
 //NOTE use this import for prisma client know req
@@ -130,12 +131,12 @@ export class AuthService {
     return this.signToken(user.id, user.email);
   }
 
-  async verifyAccount(userId: string, code: string) {
+  async verifyAccount(userId: string, dto: VerifyCode) {
     try {
       const user = await this.prisma.user.findFirst({
         where: {
           authToken: {
-            equals: code,
+            equals: dto.code,
           },
         },
       });
@@ -148,7 +149,7 @@ export class AuthService {
       }
       await this.prisma.user.update({
         where: {
-          authToken: code,
+          authToken: dto.code,
         },
         data: { authToken: undefined, isVerified: true },
       });
