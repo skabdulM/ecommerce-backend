@@ -4,6 +4,8 @@ export * from './authDtos/verifycode.dto';
 export * from './authDtos/updatepassword.dto';
 export * from './authDtos/forgotpassword.dto';
 export * from './authDtos/Email.dto';
+export * from './authDtos/confirmationemail.dto';
+export * from './authDtos/confirmedemail.dto';
 export * from './addCartProduct.dto';
 export * from './addParentCategory.dto';
 export * from './addsubcategory.dto';

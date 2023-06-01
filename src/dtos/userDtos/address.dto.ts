@@ -4,6 +4,7 @@ import {
   IsNumber,
   IsBoolean,
   IsOptional,
+  IsPostalCode,
 } from 'class-validator';
 
 export class AddressDto {
@@ -25,6 +26,7 @@ export class AddressDto {
 
   @IsNumber()
   @IsNotEmpty()
+  @IsPostalCode('IN')
   pincode: number;
 
   @IsString()

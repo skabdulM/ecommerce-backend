@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -14,14 +14,18 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: { sub: string; email: string }) {
-    // console.log(payload);
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id: payload.sub,
-      },
-    });
-
-    delete user.hash;
+    const user = await this.prisma.user
+      .findUnique({
+        where: {
+          id: payload.sub,
+        },
+      })
+      .catch((error) => {
+        return error;
+      });
+    if (user) {
+      delete user.hash;
+    }
     return user;
   }
 }

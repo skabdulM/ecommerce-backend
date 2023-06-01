@@ -8,6 +8,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  ConfimationEmail,
+  ConfirmedEmail,
   Email,
   ForgotPassword,
   LoginDto,
@@ -53,11 +55,16 @@ export class AuthService {
         },
       });
       delete user.hash;
+      const sentEmail: ConfimationEmail = {
+        email: user.email,
+        name: user.name[0],
+        authToken: user.authToken,
+      };
+      await this.sendConfirmationEmail(sentEmail);
       //NOTE for testing purposes comment out the delete user.authToken
       delete user.authToken;
-      await this.sendConfirmationEmail(user);
       const jwt_token = await this.signToken(user.id, user.email);
-      //COMMENT combining user and jwt token for login
+      //COMMENT combining user and jwt token for login sending user is optional because token is being sent
       const temp = { ...user, ...jwt_token };
       return temp;
     } catch (error) {
@@ -111,11 +118,15 @@ export class AuthService {
         where: {
           authToken: dto.code,
         },
-        data: { authToken: undefined, isVerified: true },
+        data: { authToken: null, isVerified: true },
       });
 
       delete user.hash;
-      await this.sendConfirmedEmail(user);
+      const sentConfirmedEmail: ConfirmedEmail = {
+        email: user.email,
+        name: user.name[0],
+      };
+      await this.sendConfirmedEmail(sentConfirmedEmail);
       return HttpStatus.ACCEPTED;
     } catch (e) {
       throw new UnauthorizedException(e);
@@ -156,9 +167,14 @@ export class AuthService {
         },
       });
       delete user.hash;
+      const sentEmail: ConfimationEmail = {
+        email: user.email,
+        name: user.name[0],
+        authToken: user.authToken,
+      };
+      await this.sendConfirmationEmail(sentEmail);
       //NOTE for testing purposes comment out the delete user.authToken
       delete user.authToken;
-      await this.sendConfirmationEmail(user);
       const jwt_token = await this.signToken(user.id, user.email);
       //COMMENT combining user and jwt token for login
       const temp = { ...user, ...jwt_token };
@@ -213,10 +229,15 @@ export class AuthService {
           },
         });
         delete user.hash;
-        await this.sendConfirmationEmail(user);
+        const sentEmail: ConfimationEmail = {
+          email: user.email,
+          name: user.name[0],
+          authToken: user.authToken,
+        };
+        await this.sendConfirmationEmail(sentEmail);
         //NOTE only for testing purpose return user do not return in production
         // return user;
-        // return HttpStatus.FOUND;
+        return 'Verification code sent';
       }
     } catch (error) {
       throw new BadRequestException(error);
@@ -245,11 +266,15 @@ export class AuthService {
         where: {
           authToken: dto.code,
         },
-        data: { authToken: undefined, hash: hash },
+        data: { authToken: null, hash: hash },
       });
 
       delete user.hash;
-      await this.sendConfirmedEmail(user);
+      const sentConfirmedEmail: ConfirmedEmail = {
+        email: user.email,
+        name: user.name[0],
+      };
+      await this.sendConfirmedEmail(sentConfirmedEmail);
       return await this.signToken(user.id, user.email);
     } catch (e) {
       throw new UnauthorizedException(e);
@@ -263,13 +288,17 @@ export class AuthService {
           email: dto.email,
         },
       });
-      delete user.hash;
-      //NOTE for testing purposes comment out the delete user.authToken
-      delete user.authToken;
       if (user.authToken != null) {
-        await this.sendConfirmationEmail(user);
+        delete user.hash;
+        const sentEmail: ConfimationEmail = {
+          email: user.email,
+          name: user.name[0],
+          authToken: user.authToken,
+        };
+        await this.sendConfirmationEmail(sentEmail);
         //NOTE for testing purposes returning user
-        // return user;
+        // return user
+        return 'Verification code sent';
       }
       throw new BadRequestException();
     } catch (error) {
@@ -277,10 +306,12 @@ export class AuthService {
     }
   }
 
-  async sendConfirmedEmail(user: any) {
-    const { email, name } = await user;
-    const fullName =
-      name[0].firstName + ' ' + name[0].middleName + ' ' + name[0].lastName;
+  async sendConfirmedEmail(user: ConfirmedEmail) {
+    const {
+      email,
+      name: { firstName, middleName, lastName },
+    } = await user;
+    const fullName = firstName + ' ' + middleName + ' ' + lastName;
 
     await this.mailerService.sendMail({
       to: email,
@@ -293,10 +324,13 @@ export class AuthService {
     });
   }
 
-  async sendConfirmationEmail(user: any) {
-    const { email, name } = await user;
-    const fullName =
-      name[0].firstName + ' ' + name[0].middleName + ' ' + name[0].lastName;
+  async sendConfirmationEmail(user: ConfimationEmail) {
+    const {
+      email,
+      name: { firstName, middleName, lastName },
+    } = await user;
+    const fullName = firstName + ' ' + middleName + ' ' + lastName;
+
     await this.mailerService
       .sendMail({
         to: email,
@@ -305,7 +339,7 @@ export class AuthService {
         context: {
           fullName,
           email,
-          code: user.authToken ? user.authToken : this.randomeNumber(),
+          code: user.authToken,
         },
       })
       .catch((e) => {

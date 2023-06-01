@@ -23,6 +23,7 @@ import { ImageuploadModule } from './imageupload/imageupload.module';
       transport: {
         service: 'gmail',
         secure: true,
+        //BUG remove the email and password while comminting changes
         auth: {
           user: 'vancedabdulmannan@gmail.com',
           pass: 'dlcuberihvgadvdi',

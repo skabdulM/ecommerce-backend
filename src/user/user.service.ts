@@ -26,6 +26,7 @@ export class UserService {
       });
 
     delete user.hash;
+    delete user.authToken;
     return user;
   }
 
@@ -44,6 +45,7 @@ export class UserService {
       });
 
     delete user.hash;
+    delete user.authToken;
     return user;
   }
 

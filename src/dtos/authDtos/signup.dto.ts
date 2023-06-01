@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
+  IsMobilePhone,
   IsNotEmpty,
   IsNumber,
   IsObject,
@@ -9,6 +10,7 @@ import {
   IsPhoneNumber,
   IsString,
   Length,
+  Matches,
   ValidateNested,
 } from 'class-validator';
 
@@ -36,6 +38,8 @@ export class SignUp {
 
   @IsString()
   @IsNotEmpty()
+  @Length(4, 15)
+  @Matches('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$')
   password: string;
 
   @ValidateNested()
@@ -46,5 +50,6 @@ export class SignUp {
   @IsString()
   @IsOptional()
   @IsPhoneNumber('IN')
+  @IsMobilePhone('en-IN')
   phone?: string;
 }

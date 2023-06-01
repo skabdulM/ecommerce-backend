@@ -1,8 +1,10 @@
 import {
   IsEmail,
+  IsMobilePhone,
   IsNotEmpty,
   IsObject,
   IsOptional,
+  IsPhoneNumber,
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -23,10 +25,6 @@ export class EditUserName {
 }
 
 export class EditUserDto {
-  // @IsEmail()
-  // @IsOptional()
-  // email?: string;
-
   @IsOptional()
   @ValidateNested()
   @IsObject()
@@ -35,5 +33,7 @@ export class EditUserDto {
 
   @IsString()
   @IsOptional()
+  @IsPhoneNumber('IN')
+  @IsMobilePhone('en-IN')
   phone?: string;
 }
