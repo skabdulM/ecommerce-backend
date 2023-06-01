@@ -43,10 +43,6 @@ export class SignUp {
   @Type(() => SignUpname)
   name: SignUpname;
 
-  // @IsString()
-  // @IsOptional()
-  // authConfirmToken?: string;
-  //[ ] Phone number verify
   @IsString()
   @IsOptional()
   @IsPhoneNumber('IN')

@@ -42,24 +42,24 @@ export class AuthController {
   }
 
   @UseGuards(JwtGuard)
-  @Patch('update/email/req')
+  @Post('update/email/req')
   updateEmailReq(@GetUser('id') userId: string, @Body() dto: Email) {
     return this.authService.updateEmailReq(userId, dto);
   }
 
   @UseGuards(JwtGuard)
-  @Patch('update/password')
+  @Post('update/password')
   updatePassword(@GetUser('id') userId: string, @Body() dto: UpdatePassword) {
     return this.authService.updatePassword(userId, dto);
   }
 
   @HttpCode(HttpStatus.FOUND)
-  @Patch('forgotpasswordreq')
+  @Post('forgotpasswordreq')
   forgotPasswordreq(@Body() dto: Email) {
     return this.authService.forgotPasswordreq(dto);
   }
 
-  @Patch('forgotpasswordverify')
+  @Post('forgotpasswordverify')
   forgotPasswordverify(@Body() dto: ForgotPassword) {
     return this.authService.forgotPasswordverify(dto);
   }

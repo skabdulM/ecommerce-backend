@@ -54,7 +54,7 @@ export class AuthService {
       });
       delete user.hash;
       //NOTE for testing purposes comment out the delete user.authToken
-      // delete user.authToken;
+      delete user.authToken;
       await this.sendConfirmationEmail(user);
       const jwt_token = await this.signToken(user.id, user.email);
       //COMMENT combining user and jwt token for login
@@ -157,7 +157,7 @@ export class AuthService {
       });
       delete user.hash;
       //NOTE for testing purposes comment out the delete user.authToken
-      // delete user.authToken
+      delete user.authToken;
       await this.sendConfirmationEmail(user);
       const jwt_token = await this.signToken(user.id, user.email);
       //COMMENT combining user and jwt token for login
@@ -215,7 +215,7 @@ export class AuthService {
         delete user.hash;
         await this.sendConfirmationEmail(user);
         //NOTE only for testing purpose return user do not return in production
-        return user;
+        // return user;
         // return HttpStatus.FOUND;
       }
     } catch (error) {
@@ -265,10 +265,11 @@ export class AuthService {
       });
       delete user.hash;
       //NOTE for testing purposes comment out the delete user.authToken
-      // delete user.authToken
+      delete user.authToken;
       if (user.authToken != null) {
         await this.sendConfirmationEmail(user);
-        return user;
+        //NOTE for testing purposes returning user
+        // return user;
       }
       throw new BadRequestException();
     } catch (error) {
@@ -277,11 +278,9 @@ export class AuthService {
   }
 
   async sendConfirmedEmail(user: any) {
-    const {
-      email,
-      name: { firstName, lastName, middleName },
-    } = user;
-    const fullName = firstName + ' ' + middleName + ' ' + lastName;
+    const { email, name } = await user;
+    const fullName =
+      name[0].firstName + ' ' + name[0].middleName + ' ' + name[0].lastName;
 
     await this.mailerService.sendMail({
       to: email,
@@ -295,12 +294,9 @@ export class AuthService {
   }
 
   async sendConfirmationEmail(user: any) {
-    const {
-      email,
-      name: { firstName, lastName, middleName },
-    } = await user;
-    const fullName = firstName + ' ' + middleName + ' ' + lastName;
-
+    const { email, name } = await user;
+    const fullName =
+      name[0].firstName + ' ' + name[0].middleName + ' ' + name[0].lastName;
     await this.mailerService
       .sendMail({
         to: email,
@@ -309,7 +305,7 @@ export class AuthService {
         context: {
           fullName,
           email,
-          code: this.randomeNumber(),
+          code: user.authToken ? user.authToken : this.randomeNumber(),
         },
       })
       .catch((e) => {

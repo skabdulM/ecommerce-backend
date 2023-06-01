@@ -7,6 +7,8 @@ import { ProductModule } from './product/product.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { ImageuploadModule } from './imageupload/imageupload.module';
 
 @Module({
   imports: [
@@ -30,13 +32,15 @@ import { join } from 'path';
         from: '"No Reply" vancedabdulmannan@gmail.com',
       },
       template: {
-        dir: join(__dirname, './email-templates'),
+        dir: join(__dirname, '../email-templates'),
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true,
         },
       },
     }),
+    CloudinaryModule,
+    ImageuploadModule,
   ],
   controllers: [],
   providers: [],

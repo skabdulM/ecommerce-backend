@@ -55,9 +55,9 @@ model Products {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   productName        String
+  productImgs        String[]
   productDescription String
   productPrice       Float
-  productImg         String
   productDiscount    Int?
   views              Int      @default(0)
 
@@ -70,8 +70,19 @@ model Products {
   brand            Brands?           @relation(fields: [brandsId], references: [id], onDelete: SetNull)
   comments         ProductComments[]
 
+  // productImg Image[]
   tagIds String[] @db.ObjectId
   tag    Tags[]   @relation(fields: [tagIds], references: [id])
+}
+
+model Image {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  publicId String @unique
+  format   String
+  version  String
+
+  // product   Products @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // productId String   @db.ObjectId
 }
 
 model ProductDetails {
