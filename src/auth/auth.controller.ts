@@ -3,7 +3,6 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -28,8 +27,8 @@ export class AuthController {
     return this.authService.signup(dto);
   }
 
-  @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.ACCEPTED)
+  @UseGuards(JwtGuard)
   @Post('verify')
   async Verify(@GetUser('id') userId: string, @Body() dto: VerifyCode) {
     return await this.authService.verifyAccount(userId, dto);

@@ -40,29 +40,39 @@ export class AuthService {
   async signup(dto: SignUp) {
     const hash = await argon.hash(dto.password);
     const phone = dto.phone ? dto.phone.toString() : undefined;
-    const authcode = this.randomeNumber().toString();
     const userDetails = {
       email: dto.email,
       hash: hash,
       name: { ...dto.name },
-      authToken: authcode,
       phone: phone,
     };
     try {
       const user = await this.prisma.user.create({
         data: {
           ...userDetails,
+          token: {
+            create: {
+              verificationToken: this.randomeNumber().toString(),
+            },
+          },
+        },
+        include: {
+          token: {
+            select: {
+              verificationToken: true,
+            },
+          },
         },
       });
       delete user.hash;
       const sentEmail: ConfimationEmail = {
         email: user.email,
         name: user.name[0],
-        authToken: user.authToken,
+        authToken: user.token.verificationToken,
       };
       await this.sendConfirmationEmail(sentEmail);
       //NOTE for testing purposes comment out the delete user.authToken
-      delete user.authToken;
+      delete user.token;
       const jwt_token = await this.signToken(user.id, user.email);
       //COMMENT combining user and jwt token for login sending user is optional because token is being sent
       const temp = { ...user, ...jwt_token };
@@ -100,34 +110,35 @@ export class AuthService {
 
   async verifyAccount(userId: string, dto: VerifyCode) {
     try {
-      const user = await this.prisma.user.findFirst({
+      const token = await this.prisma.token.findUnique({
         where: {
-          authToken: {
-            equals: dto.code,
-          },
+          verificationToken: dto.code,
+        },
+        include: {
+          user: true,
         },
       });
 
-      if (!user || user.id !== userId) {
-        throw new HttpException(
-          'Verification code has not found or does not match',
-          HttpStatus.UNAUTHORIZED,
-        );
+      if (!token || token.userId !== userId) {
+        throw new ForbiddenException();
       }
       await this.prisma.user.update({
         where: {
-          authToken: dto.code,
+          id: token.userId,
         },
-        data: { authToken: null, isVerified: true },
+        data: {
+          token: {
+            delete: true,
+          },
+          isVerified: true,
+        },
       });
 
-      delete user.hash;
       const sentConfirmedEmail: ConfirmedEmail = {
-        email: user.email,
-        name: user.name[0],
+        email: token.user.email,
+        name: token.user.name[0],
       };
       await this.sendConfirmedEmail(sentConfirmedEmail);
-      return HttpStatus.ACCEPTED;
     } catch (e) {
       throw new UnauthorizedException(e);
     }
@@ -163,18 +174,29 @@ export class AuthService {
         data: {
           email: dto.email,
           isVerified: false,
-          authToken: this.randomeNumber().toString(),
+          token: {
+            create: {
+              verificationToken: this.randomeNumber().toString(),
+            },
+          },
+        },
+        include: {
+          token: {
+            select: {
+              verificationToken: true,
+            },
+          },
         },
       });
       delete user.hash;
       const sentEmail: ConfimationEmail = {
         email: user.email,
         name: user.name[0],
-        authToken: user.authToken,
+        authToken: user.token.verificationToken,
       };
       await this.sendConfirmationEmail(sentEmail);
       //NOTE for testing purposes comment out the delete user.authToken
-      delete user.authToken;
+      delete user.token;
       const jwt_token = await this.signToken(user.id, user.email);
       //COMMENT combining user and jwt token for login
       const temp = { ...user, ...jwt_token };
@@ -225,14 +247,24 @@ export class AuthService {
             email: dto.email,
           },
           data: {
-            authToken: this.randomeNumber().toString(),
+            token: {
+              create: {
+                verificationToken: this.randomeNumber().toString(),
+              },
+            },
+          },
+          include: {
+            token: {
+              select: {
+                verificationToken: true,
+              },
+            },
           },
         });
-        delete user.hash;
         const sentEmail: ConfimationEmail = {
           email: user.email,
           name: user.name[0],
-          authToken: user.authToken,
+          authToken: user.token.verificationToken,
         };
         await this.sendConfirmationEmail(sentEmail);
         //NOTE only for testing purpose return user do not return in production
@@ -246,36 +278,37 @@ export class AuthService {
 
   async forgotPasswordverify(dto: ForgotPassword) {
     try {
-      const user = await this.prisma.user.findFirst({
+      const token = await this.prisma.token.findUnique({
         where: {
-          authToken: {
-            equals: dto.code,
-          },
+          verificationToken: dto.code,
+        },
+        include: {
+          user: true,
         },
       });
-      // || user.id !== userId
-      if (!user) {
-        throw new HttpException(
-          'Verification code has not found or does not match',
-          HttpStatus.UNAUTHORIZED,
-        );
+      if (!token) {
+        throw new UnauthorizedException();
       }
       const hash = await argon.hash(dto.newPassword);
 
       await this.prisma.user.update({
         where: {
-          authToken: dto.code,
+          id: token.userId,
         },
-        data: { authToken: null, hash: hash },
+        data: {
+          hash: hash,
+          token: {
+            delete: true,
+          },
+        },
       });
 
-      delete user.hash;
       const sentConfirmedEmail: ConfirmedEmail = {
-        email: user.email,
-        name: user.name[0],
+        email: token.user.email,
+        name: token.user.name[0],
       };
       await this.sendConfirmedEmail(sentConfirmedEmail);
-      return await this.signToken(user.id, user.email);
+      return await this.signToken(token.userId, token.user.email);
     } catch (e) {
       throw new UnauthorizedException(e);
     }
@@ -287,17 +320,22 @@ export class AuthService {
         where: {
           email: dto.email,
         },
+        include: {
+          token: {
+            select: {
+              verificationToken: true,
+            },
+          },
+        },
       });
-      if (user.authToken != null) {
-        delete user.hash;
+      if (user.token != null) {
         const sentEmail: ConfimationEmail = {
           email: user.email,
           name: user.name[0],
-          authToken: user.authToken,
+          authToken: user.token.verificationToken,
         };
         await this.sendConfirmationEmail(sentEmail);
         //NOTE for testing purposes returning user
-        // return user
         return 'Verification code sent';
       }
       throw new BadRequestException();
