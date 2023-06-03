@@ -14,7 +14,7 @@ import {
   SignUp,
   UpdatePassword,
   VerifyCode,
-} from '../dtos';
+} from '../dtos/index';
 import { GetUser } from './decorator';
 import { JwtGuard } from './guard';
 
