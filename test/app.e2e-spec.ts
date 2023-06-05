@@ -37,7 +37,7 @@ describe('app e3e test', () => {
     await prisma.cleaDb();
 
     pactum.request.setBaseUrl('http://localhost:3000');
-    pactum.request.setDefaultTimeout(5000);
+    // pactum.request.setDefaultTimeout(5000);
   });
   afterAll(() => {
     app.close();
@@ -73,8 +73,8 @@ describe('app e3e test', () => {
 
       it('Should signup', async () => {
         const user: SignUp = {
-          email: 'test@gmail.com',
-          password: 'test@gmail.com',
+          email: 'vancedabdulmannan@gmail.com',
+          password: 'mannan@1M',
           name: {
             firstName: 'Abdul ',
             middleName: 'Mannan',
@@ -87,24 +87,25 @@ describe('app e3e test', () => {
           .post('/auth/signup')
           .withBody(user)
           .expectStatus(201)
-          .stores('authCode', 'authToken')
+          .stores('authCode', 'token')
           .stores('userAccessToken', 'access_token');
       });
       it('Should resend the verification code', async () => {
         const email: Email = {
-          email: 'test@gmail.com',
+          email: 'vancedabdulmannan@gmail.com',
         };
         return await pactum
           .spec()
           .post('/auth/verification/resend')
           .withBody(email)
           .expectStatus(201)
-          .stores('authCode', 'authToken');
+          .stores('authCode', 'token')
+          .withRequestTimeout(5000);
       });
       it('Should signup and create another user', async () => {
         const user2: SignUp = {
-          email: 'test2@gmail.com',
-          password: 'test2@gmail.com',
+          email: 'useless8334@gmail.com',
+          password: 'mannan@1M',
           name: {
             firstName: 'Abdul ',
             middleName: 'Mannan',
@@ -116,13 +117,13 @@ describe('app e3e test', () => {
           .post('/auth/signup')
           .withBody(user2)
           .expectStatus(201)
-          .stores('authCode2', 'authToken')
+          .stores('authCode2', 'token')
           .stores('userAccessToken2', 'access_token');
       });
       it('Should not signup if email is already taken', () => {
         const user: SignUp = {
-          email: 'test@gmail.com',
-          password: 'test@gmail.com',
+          email: 'vancedabdulmannan@gmail.com',
+          password: 'mannan@1M',
           name: {
             firstName: 'Abdul ',
             middleName: 'Mannan',
@@ -176,8 +177,8 @@ describe('app e3e test', () => {
           .spec()
           .post('/auth/signin')
           .withBody({
-            email: 'test@gmail.com',
-            password: 'test@gmail.com',
+            email: 'vancedabdulmannan@gmail.com',
+            password: 'mannan@1M',
           })
           .expectStatus(200);
       });
@@ -186,8 +187,8 @@ describe('app e3e test', () => {
           .spec()
           .post('/auth/signin')
           .withBody({
-            email: 'test2@gmail.com',
-            password: 'test2@gmail.com',
+            email: 'useless8334@gmail.com',
+            password: 'mannan@1M',
           })
           .expectStatus(200);
       });
@@ -222,7 +223,7 @@ describe('app e3e test', () => {
           .post('/auth/signin')
           .withBody({
             email: 'test@gmail.com',
-            password: 'abadul@gmail.com',
+            password: 'mannan@1N',
           })
           .expectStatus(403);
       });
@@ -230,26 +231,28 @@ describe('app e3e test', () => {
     describe('Update Email and password', () => {
       it('Should send req for email update', () => {
         const dto: Email = {
-          email: 'testupdate@gmail.com',
+          email: 'shaikiqra8334@gmail.com',
         };
         return pactum
           .spec()
-          .patch('/auth/update/email/req')
+          .post('/auth/update/email/req')
           .withBearerToken('$S{userAccessToken}')
           .withBody(dto)
-          .stores('authCode', 'authToken')
+          .expectStatus(201)
+          .stores('authCode', 'token')
           .stores('userAccessToken', 'access_token');
       });
       it('Should resend the verification code', async () => {
         const email: Email = {
-          email: 'testupdate@gmail.com',
+          email: 'shaikiqra8334@gmail.com',
         };
         return await pactum
           .spec()
           .post('/auth/verification/resend')
           .withBody(email)
           .expectStatus(201)
-          .stores('authCode', 'authToken');
+          .stores('authCode', 'token')
+          .withRequestTimeout(5000);
       });
       it('Should Verify the verification code for updated email', () => {
         return pactum
@@ -261,71 +264,72 @@ describe('app e3e test', () => {
       });
       it('Should Update the password', () => {
         const password: UpdatePassword = {
-          password: 'test@gmail.com',
-          newPassword: 'newtest@gmail.com',
+          password: 'mannan@1M',
+          newPassword: 'mannan@1N',
         };
         return pactum
           .spec()
-          .patch('/auth/update/password')
+          .post('/auth/update/password')
           .withBody(password)
           .withBearerToken('$S{userAccessToken}')
           .expectStatus(200);
       });
       it('Should not Update the password', () => {
         const password: UpdatePassword = {
-          password: 'test@gmail.com',
-          newPassword: 'newtest@gmail.com',
+          password: 'mannan@1M',
+          newPassword: 'mannan@1N',
         };
         return pactum
           .spec()
-          .patch('/auth/update/password')
+          .post('/auth/update/password')
           .withBody(password)
           .withBearerToken('$S{userAccessToken}')
           .expectStatus(403);
       });
       it('Should Send the verification code for forgot password', () => {
         const email: Email = {
-          email: 'testupdate@gmail.com',
+          email: 'shaikiqra8334@gmail.com',
         };
         return pactum
           .spec()
-          .patch('/auth/forgotpasswordreq')
+          .post('/auth/forgotpasswordreq')
           .withBody(email)
-          .expectStatus(302)
-          .stores('authCode', 'authToken');
+          .expectStatus(200)
+          .stores('authCode', 'token');
       });
       it('Should resend the verification code', async () => {
         const email: Email = {
-          email: 'testupdate@gmail.com',
+          email: 'shaikiqra8334@gmail.com',
         };
         return await pactum
           .spec()
           .post('/auth/verification/resend')
           .withBody(email)
           .expectStatus(201)
-          .stores('authCode', 'authToken');
+          .stores('authCode', 'token')
+          .withRequestTimeout(5000);
       });
       it('Should reject to update password if wrong authcode is provide', () => {
         const password: ForgotPassword = {
-          newPassword: 'testupdate@gmail.com',
+          newPassword: 'Mannan@1m',
           code: '225930',
         };
         return pactum
           .spec()
-          .patch('/auth/forgotpasswordverify')
+          .post('/auth/forgotpasswordverify')
           .withBody(password)
           .expectStatus(401);
       });
       it('Should update the password to new password', () => {
         const password: ForgotPassword = {
-          newPassword: 'testupdate@gmail.com',
+          newPassword: 'Mannan@1m',
           code: '$S{authCode}',
         };
         return pactum
           .spec()
-          .patch('/auth/forgotpasswordverify')
+          .post('/auth/forgotpasswordverify')
           .withBody(password)
-          .expectStatus(200);
+          .expectStatus(202);
       });
       it('Should reject the req if email not found', () => {
         const email: Email = {
@@ -333,7 +337,7 @@ describe('app e3e test', () => {
         };
         return pactum
           .spec()
-          .patch('/auth/forgotpasswordreq')
+          .post('/auth/forgotpasswordreq')
           .withBody(email)
           .expectStatus(400);
       });
@@ -405,7 +409,7 @@ describe('app e3e test', () => {
           streetName: 'Lodha Road',
           landmark: 'Naya Nagar',
           locality: 'Thane',
-          pincode: 40130,
+          pincode: 401107,
           city: 'Dahisar',
           state: 'Maharashtra',
           addresstype: false,
@@ -424,7 +428,7 @@ describe('app e3e test', () => {
           streetName: 'test Road',
           landmark: 'test Nagar',
           locality: 'Thane',
-          pincode: 40041,
+          pincode: 401105,
           city: 'MIra road',
           state: 'Maharashtra',
           addresstype: false,

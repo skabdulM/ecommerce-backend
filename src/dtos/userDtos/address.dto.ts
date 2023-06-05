@@ -26,7 +26,6 @@ export class AddressDto {
 
   @IsNumber()
   @IsNotEmpty()
-  @IsPostalCode('IN')
   pincode: number;
 
   @IsString()

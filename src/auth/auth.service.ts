@@ -70,12 +70,17 @@ export class AuthService {
         name: user.name[0],
         authToken: user.token.verificationToken,
       };
-      await this.sendConfirmationEmail(sentEmail);
-      //NOTE for testing purposes comment out the delete user.authToken
+      this.sendConfirmationEmail(sentEmail);
+      //TEST for testing purposes comment out the delete user.authToken
       delete user.token;
       const jwt_token = await this.signToken(user.id, user.email);
       //COMMENT combining user and jwt token for login sending user is optional because token is being sent
-      const temp = { ...user, ...jwt_token };
+      const temp = {
+        ...user,
+        //TEST  for testing purposes send this the delete user.authToken
+        // token: user.token.verificationToken,
+        ...jwt_token,
+      };
       return temp;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -138,7 +143,7 @@ export class AuthService {
         email: token.user.email,
         name: token.user.name[0],
       };
-      await this.sendConfirmedEmail(sentConfirmedEmail);
+      this.sendConfirmedEmail(sentConfirmedEmail);
     } catch (e) {
       throw new UnauthorizedException(e);
     }
@@ -194,12 +199,17 @@ export class AuthService {
         name: user.name[0],
         authToken: user.token.verificationToken,
       };
-      await this.sendConfirmationEmail(sentEmail);
-      //NOTE for testing purposes comment out the delete user.authToken
+      this.sendConfirmationEmail(sentEmail);
+      //TEST for testing purposes comment out the delete user.authToken
       delete user.token;
       const jwt_token = await this.signToken(user.id, user.email);
       //COMMENT combining user and jwt token for login
-      const temp = { ...user, ...jwt_token };
+      const temp = {
+        ...user,
+        //TEST  for testing purposes send this the delete user.authToken
+        // token: user.token.verificationToken,
+        ...jwt_token,
+      };
       return temp;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -266,9 +276,9 @@ export class AuthService {
           name: user.name[0],
           authToken: user.token.verificationToken,
         };
-        await this.sendConfirmationEmail(sentEmail);
-        //NOTE only for testing purpose return user do not return in production
-        // return user;
+        this.sendConfirmationEmail(sentEmail);
+        //TEST only for testing purpose return user do not return in production
+        // return { token: user.token.verificationToken };
         return 'Verification code sent';
       }
     } catch (error) {
@@ -307,7 +317,7 @@ export class AuthService {
         email: token.user.email,
         name: token.user.name[0],
       };
-      await this.sendConfirmedEmail(sentConfirmedEmail);
+      this.sendConfirmedEmail(sentConfirmedEmail);
       return await this.signToken(token.userId, token.user.email);
     } catch (e) {
       throw new UnauthorizedException(e);
@@ -335,7 +345,8 @@ export class AuthService {
           authToken: user.token.verificationToken,
         };
         await this.sendConfirmationEmail(sentEmail);
-        //NOTE for testing purposes returning user
+        //TEST for testing purposes returning user
+        // return { token: user.token.verificationToken };
         return 'Verification code sent';
       }
       throw new BadRequestException();

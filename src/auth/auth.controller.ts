@@ -23,7 +23,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('signup')
-  signup(@Body() dto: SignUp) {
+  async signup(@Body() dto: SignUp) {
     return this.authService.signup(dto);
   }
 
@@ -42,29 +42,34 @@ export class AuthController {
 
   @UseGuards(JwtGuard)
   @Post('update/email/req')
-  updateEmailReq(@GetUser('id') userId: string, @Body() dto: Email) {
+  async updateEmailReq(@GetUser('id') userId: string, @Body() dto: Email) {
     return this.authService.updateEmailReq(userId, dto);
   }
 
   @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
   @Post('update/password')
-  updatePassword(@GetUser('id') userId: string, @Body() dto: UpdatePassword) {
+  async updatePassword(
+    @GetUser('id') userId: string,
+    @Body() dto: UpdatePassword,
+  ) {
     return this.authService.updatePassword(userId, dto);
   }
 
-  @HttpCode(HttpStatus.FOUND)
+  @HttpCode(HttpStatus.OK)
   @Post('forgotpasswordreq')
-  forgotPasswordreq(@Body() dto: Email) {
+  async forgotPasswordreq(@Body() dto: Email) {
     return this.authService.forgotPasswordreq(dto);
   }
 
+  @HttpCode(HttpStatus.ACCEPTED)
   @Post('forgotpasswordverify')
-  forgotPasswordverify(@Body() dto: ForgotPassword) {
+  async forgotPasswordverify(@Body() dto: ForgotPassword) {
     return this.authService.forgotPasswordverify(dto);
   }
 
   @Post('verification/resend')
-  resendVerification(@Body() dto: Email) {
+  async resendVerification(@Body() dto: Email) {
     return this.authService.resendVerification(dto);
   }
 }
