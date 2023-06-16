@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ForbiddenException,
-  HttpException,
   HttpStatus,
   Injectable,
   UnauthorizedException,
@@ -38,6 +37,7 @@ export class AuthService {
   }
 
   async signup(dto: SignUp) {
+    const isAdmin = dto.adminHash === process.env.ADMIN_KEY;
     const hash = await argon.hash(dto.password);
     const phone = dto.phone ? dto.phone.toString() : undefined;
     const userDetails = {
@@ -50,6 +50,7 @@ export class AuthService {
       const user = await this.prisma.user.create({
         data: {
           ...userDetails,
+          roles: isAdmin ? 'ADMIN' : undefined,
           token: {
             create: {
               verificationToken: this.randomeNumber().toString(),
@@ -359,7 +360,7 @@ export class AuthService {
     const {
       email,
       name: { firstName, middleName, lastName },
-    } = await user;
+    } = user;
     const fullName = firstName + ' ' + middleName + ' ' + lastName;
 
     await this.mailerService.sendMail({
@@ -377,7 +378,7 @@ export class AuthService {
     const {
       email,
       name: { firstName, middleName, lastName },
-    } = await user;
+    } = user;
     const fullName = firstName + ' ' + middleName + ' ' + lastName;
 
     await this.mailerService

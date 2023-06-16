@@ -1,10 +1,8 @@
 import { Type } from 'class-transformer';
 import {
-  IsBoolean,
   IsEmail,
   IsMobilePhone,
   IsNotEmpty,
-  IsNumber,
   IsObject,
   IsOptional,
   IsPhoneNumber,
@@ -52,4 +50,8 @@ export class SignUp {
   @IsPhoneNumber('IN')
   @IsMobilePhone('en-IN')
   phone?: string;
+
+  @IsString()
+  @IsOptional()
+  adminHash?: string;
 }

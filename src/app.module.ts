@@ -9,6 +9,8 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { join } from 'path';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ImageuploadModule } from './imageupload/imageupload.module';
+import { CategoryModule } from './category/category.module';
+import { BrandModule } from './brand/brand.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { ImageuploadModule } from './imageupload/imageupload.module';
     }),
     CloudinaryModule,
     ImageuploadModule,
+    CategoryModule,
+    BrandModule,
   ],
   controllers: [],
   providers: [],
